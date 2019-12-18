@@ -1,0 +1,266 @@
+<html>
+
+<head>
+    <!-- <script src="jquery-2.1.4.js"></script> -->
+    <!-- <script lang="javascript" src="xlsx.full.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.15.1/xlsx.full.min.js"></script>
+    <title>Engineering Project</title>
+    <meta chatset="UTF-8">
+    <style type="text/css">
+        * {
+            box-sizing: border-box;
+            margin: 10px;
+        }
+
+        #myInput {
+            background-image: url('./search-icon.png');
+            border-radius: 5px;
+
+            background-repeat: no-repeat;
+            width: 100%;
+            font-size: 16px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-bottom: 12px;
+            text-indent: 40px;
+        }
+
+        #myInput ::placeholder {
+
+            color: pink;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            border: 1px solid #ddd;
+            font-size: 18px;
+        }
+
+        table th,
+        #myTable td {
+            text-align: left;
+            padding: 12px;
+        }
+
+        table tr {
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tr.header,
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .btn {
+            border: 2px solid gray;
+            color: gray;
+            background-color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+
+        }
+
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+
+
+        }
+
+        .upload-btn-wrapper input[type=file]:hover {
+            cursor: pointer;
+
+        }
+
+        #content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        #items {
+            margin-bottom: 20px;
+            border: 2px solid orangered;
+            cursor: pointer;
+            box-sizing: border-box;
+
+
+        }
+
+        #items td {
+            border: 2px solid orangered;
+
+
+        }
+        #items tr{
+            border:2px solid orangered;
+        }
+
+        #items thead {
+            background-color: #ddd;
+            text-align: center;
+        }
+
+        #tableTxt {
+            border: 1px solid lightcoral;
+            box-sizing: border-box;
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            background-color: aliceblue;
+            display: none;
+            margin-bottom:35px;
+
+        }
+
+        #wrapper table {
+            cursor: pointer;
+
+        }
+
+        #tableTxt button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content">
+        <!-- <embed height="60" type="audio/midi" width="144" src="feelingwhitney.mp3" volume="60" loop="false" autostart="true" /> -->
+        <audio controls autoplay>
+            <source src="./feelingwhitney.mp3" type="audio/mp3">
+        </audio>
+        <div class="upload-btn-wrapper">
+            <button class="btn">Upload a file</button>
+            <input type="file" name="myfile" id="input-excel" />
+        </div>
+    </div>
+
+    
+    <div id="container">
+        <div id="tableTxt">
+            <p>Itens Adicionados</p>
+            <table id="items">
+                <thead>
+                    
+                    <tr>
+                        <td>Produto</td>
+                        <td>Preço</td>
+                    </tr>
+                </thead>
+            </table>
+            <button>Export</button>
+        </div>
+        <hr>
+        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Procure por produtos.."
+            title="Search for products">
+        <div id="wrapper">
+
+        </div>
+    </div>
+    <script>
+        function onRowClick(callback) {
+            let table = document.querySelector('#wrapper table')
+            rows = table.getElementsByTagName("tr")
+            let i;
+            console.log("entrou aqui")
+            for (i = 2; i < rows.length; i++) {
+                table.rows[i].onclick = function (row) {
+                    return function () {
+                        callback(row)
+                        
+                    }
+                    
+                } (table.rows[i])
+            }
+
+        }
+        function onRowclickDelete() {
+            const table = document.querySelector('#items')
+            const rows = table.getElementsByTagName("tr")
+            let i
+            for(i = 1;i < rows.length; i++){
+            
+                table.rows[i].onclick = function(row){
+                    // this.remove()
+                    this.style.display = "none";
+                    
+                    
+            }
+        }
+        }
+ 
+
+
+        $('#input-excel').change(function (e) {
+            var reader = new FileReader();
+            reader.readAsArrayBuffer(e.target.files[0]);
+            reader.onload = function (e) {
+                var data = new Uint8Array(reader.result);
+                var wb = XLSX.read(data, { type: 'array' });
+                console.log(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { raw: true, header: 1 }))
+                console.log(wb.Sheets.Plan1.B11.v)
+                let value = JSON.stringify(wb.Sheets.Plan1)
+                console.log(value)
+                let json = XLSX.utils.sheet_to_json(wb)
+                // console.log(json["!ref"].A4)
+
+                console.log(json)
+                var htmlstr = XLSX.write(wb, { sheet: "Plan1", type: 'string', bookType: 'html' });
+                console.log(htmlstr)
+                $('#wrapper')[0].innerHTML += htmlstr;
+
+                onRowClick(function (row) {
+                    const product = row.childNodes[1].innerHTML
+                    const price = row.childNodes[2].innerHTML
+                    console.log(value)
+                    document.querySelector('#tableTxt').style.display = "block";
+                    document.getElementById("items").innerHTML += "<tr><td>" + product + " </td><td>" + price + "</td></tr>"
+                    onRowclickDelete()
+
+                })
+            }
+        });
+        function myFunction() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("input-excel");
+            filter = document.querySelector("#myInput").value.toUpperCase();
+            console.log(filter)
+            table = document.querySelector("#wrapper table");
+            console.log(table)
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[1];
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    console.log(txtValue)
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
